@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>YouTube Sentiment Analyzer</title>
+<style>
+body { font-family: Arial; max-width: 900px; margin: auto; padding: 20px; }
+input { width: 70%; padding: 8px; }
+button { padding: 8px; }
+.positive { background:#e6ffed; }
+.negative { background:#ffe6e6; }
+.neutral  { background:#fff8d1; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+td, th { border: 1px solid #ddd; padding: 8px; }
+</style>
+</head>
+<body>
+
+<h1>YouTube Sentiment Analyzer</h1>
+<p>Paste a YouTube link below:</p>
+
+<input id="url" placeholder="https://youtube.com/watch?v=xxxx">
+<button onclick="analyze()">Analyze</button>
+
+<h2 id="summary"></h2>
+
+<table id="results" style="display:none">
+<tr><th>Comment</th><th>Sentiment</th><th>Pos Confidence</th><th>Neg Confidence</th></tr>
+<tbody id="tbody"></tbody>
+</table>
+
+<script>
+async function analyze() {
+    const url = document.getElementById("url").value;
+
+    const res = await fetch("/analyze", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({url})
+    });
+
+    const data = await res.json();
+
+    document.getElementById("summary").innerText =
+      `Total: ${data.total_comments} | Positive: ${data.summary.positive} | Negative: ${data.summary.negative} | Neutral: ${data.summary.neutral}`;
+
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    data.comments.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.className = c.sentiment.toLowerCase();
+        tr.innerHTML =
+            `<td>${c.text}</td>
+             <td>${c.sentiment}</td>
+             <td>${c.confidence_positive.toFixed(3)}</td>
+             <td>${c.confidence_negative.toFixed(3)}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById("results").style.display = "table";
+}
+</script>
+
+</body>
+</html>
